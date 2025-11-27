@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome</h2>
+<p>Select your role:</p>
+<ul>
+  <li><a href="{{ url_for('main.member_portal') }}">I am a Member</a></li>
+  <li><a href="{{ url_for('main.trainer_portal') }}">I am a Trainer</a></li>
+  <li><a href="{{ url_for('main.admin_portal') }}">I am an Admin</a></li>
+</ul>
+{% endblock %}

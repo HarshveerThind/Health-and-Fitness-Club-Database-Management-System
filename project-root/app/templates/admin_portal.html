@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Portal</h2>
+
+<section>
+  <h3>Create class session</h3>
+  <form method="post" action="{{ url_for('main.admin_class_route') }}">
+    <label>Title: <input type="text" name="title" required></label><br>
+
+    <label>Trainer:
+      <select name="trainer_id" required>
+        {% for t in trainers %}
+          <option value="{{ t.id }}">#{{ t.id }} - {{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Room:
+      <select name="room_id" required>
+        {% for r in rooms %}
+          <option value="{{ r.id }}">{{ r.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Start: <input type="datetime-local" name="start_time" required></label><br>
+    <label>End: <input type="datetime-local" name="end_time" required></label><br>
+    <label>Capacity: <input type="number" name="capacity" required></label><br>
+
+    <button type="submit">Create class</button>
+  </form>
+</section>
+
+<hr>
+
+<section>
+  <h3>Create PT session</h3>
+  <form method="post" action="{{ url_for('main.admin_ptsession_route') }}">
+    <label>Member:
+      <select name="member_id" required>
+        {% for m in members %}
+          <option value="{{ m.id }}">#{{ m.id }} - {{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Trainer:
+      <select name="trainer_id" required>
+        {% for t in trainers %}
+          <option value="{{ t.id }}">#{{ t.id }} - {{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Room:
+      <select name="room_id" required>
+        {% for r in rooms %}
+          <option value="{{ r.id }}">{{ r.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Start: <input type="datetime-local" name="start_time" required></label><br>
+    <label>End: <input type="datetime-local" name="end_time" required></label><br>
+
+    <button type="submit">Create PT session</button>
+  </form>
+</section>
+
+<hr>
+
+<section>
+  <h3>Create invoice</h3>
+  <form method="post" action="{{ url_for('main.admin_invoice_route') }}">
+    <label>Member:
+      <select name="member_id" required>
+        {% for m in members %}
+          <option value="{{ m.id }}">#{{ m.id }} - {{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label><br>
+
+    <label>Description: <input type="text" name="description"></label><br>
+    <label>Amount: <input type="number" step="0.01" name="amount" required></label><br>
+    <label>Payment method: <input type="text" name="payment_method"></label><br>
+
+    <button type="submit">Create invoice</button>
+  </form>
+
+  <h4>Existing invoices</h4>
+  {% if invoices %}
+    <table border="1" cellpadding="4">
+      <tr>
+        <th>ID</th><th>Member</th><th>Amount</th><th>Status</th><th>Action</th>
+      </tr>
+      {% for inv in invoices %}
+        <tr>
+          <td>{{ inv.id }}</td>
+          <td>{{ inv.member.name }}</td>
+          <td>{{ inv.amount }}</td>
+          <td>{{ inv.status }}</td>
+          <td>
+            {% if inv.status != 'Paid' %}
+              <form method="post" action="{{ url_for('main.admin_invoice_pay_route', invoice_id=inv.id) }}">
+                <button type="submit">Mark paid</button>
+              </form>
+            {% else %}
+              Paid at {{ inv.paid_at }}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No invoices yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
