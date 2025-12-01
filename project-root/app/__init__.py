@@ -11,12 +11,16 @@ def create_app():
     )
     app.config.from_object(Config)
 
-    # initialize DB
+    # initialize DB and models
     init_db(app)
 
     with app.app_context():
-        from models import schema  # ensure models are registered
+        from models import schema  # noqa: F401, ensure models are registered
         db.create_all()
+
+        # seed default rooms if there are none
+        from models.operations import ensure_default_rooms
+        ensure_default_rooms()
 
     from app.routes import bp as main_bp
     app.register_blueprint(main_bp)

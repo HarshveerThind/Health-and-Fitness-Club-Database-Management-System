@@ -1,118 +1,247 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Admin Portal</h2>
+<main>
+  <h2>Admin portal</h2>
 
-<section>
-  <h3>Create class session</h3>
-  <form method="post" action="{{ url_for('main.admin_class_route') }}">
-    <label>Title: <input type="text" name="title" required></label><br>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flash">
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
 
-    <label>Trainer:
-      <select name="trainer_id" required>
+  <section>
+    <h3>Create trainer</h3>
+    <form method="post" action="{{ url_for('main.admin_trainer_route') }}">
+      <label>Name:
+        <input type="text" name="name" required>
+      </label>
+      <label>Email:
+        <input type="email" name="email" required>
+      </label>
+      <button type="submit">Create trainer</button>
+    </form>
+
+    {% if trainers %}
+      <h4>Existing trainers</h4>
+      <ul>
         {% for t in trainers %}
-          <option value="{{ t.id }}">#{{ t.id }} - {{ t.name }}</option>
+          <li>#{{ t.id }} - {{ t.name }} ({{ t.email }})</li>
         {% endfor %}
-      </select>
-    </label><br>
+      </ul>
+    {% endif %}
+  </section>
 
-    <label>Room:
-      <select name="room_id" required>
-        {% for r in rooms %}
-          <option value="{{ r.id }}">{{ r.name }}</option>
-        {% endfor %}
-      </select>
-    </label><br>
+  <hr>
 
-    <label>Start: <input type="datetime-local" name="start_time" required></label><br>
-    <label>End: <input type="datetime-local" name="end_time" required></label><br>
-    <label>Capacity: <input type="number" name="capacity" required></label><br>
+  <section>
+    <h3>Create class session</h3>
+    <form method="post" action="{{ url_for('main.admin_class_route') }}">
+      <label>Title:
+        <input type="text" name="title" required>
+      </label>
+      <label>Trainer:
+        <select name="trainer_id" required>
+          {% for t in trainers %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Room:
+        <select name="room_id" required>
+          {% for r in rooms %}
+            <option value="{{ r.id }}">{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Start:
+        <input type="datetime-local" name="start_time" required>
+      </label>
+      <label>End:
+        <input type="datetime-local" name="end_time" required>
+      </label>
+      <label>Capacity:
+        <input type="number" name="capacity" value="10">
+      </label>
+      <button type="submit">Create class</button>
+    </form>
+  </section>
 
-    <button type="submit">Create class</button>
-  </form>
-</section>
+  <section>
+    <h3>Create PT session</h3>
+    <form method="post" action="{{ url_for('main.admin_ptsession_route') }}">
+      <label>Member:
+        <select name="member_id" required>
+          {% for m in members %}
+            <option value="{{ m.id }}">{{ m.name }} ({{ m.email }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Trainer:
+        <select name="trainer_id" required>
+          {% for t in trainers %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Room:
+        <select name="room_id" required>
+          {% for r in rooms %}
+            <option value="{{ r.id }}">{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Start:
+        <input type="datetime-local" name="start_time" required>
+      </label>
+      <label>End:
+        <input type="datetime-local" name="end_time" required>
+      </label>
+      <button type="submit">Create PT session</button>
+    </form>
+  </section>
 
-<hr>
+  <section>
+    <h3>Create invoice</h3>
+    <form method="post" action="{{ url_for('main.admin_invoice_route') }}">
+      <label>Member:
+        <select name="member_id" required>
+          {% for m in members %}
+            <option value="{{ m.id }}">{{ m.name }} ({{ m.email }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Description:
+        <input type="text" name="description" required>
+      </label>
+      <label>Amount:
+        <input type="number" step="0.01" name="amount" required>
+      </label>
+      <label>Payment method:
+        <input type="text" name="payment_method" value="Credit card">
+      </label>
+      <button type="submit">Create invoice</button>
+    </form>
 
-<section>
-  <h3>Create PT session</h3>
-  <form method="post" action="{{ url_for('main.admin_ptsession_route') }}">
-    <label>Member:
-      <select name="member_id" required>
-        {% for m in members %}
-          <option value="{{ m.id }}">#{{ m.id }} - {{ m.name }}</option>
-        {% endfor %}
-      </select>
-    </label><br>
-
-    <label>Trainer:
-      <select name="trainer_id" required>
-        {% for t in trainers %}
-          <option value="{{ t.id }}">#{{ t.id }} - {{ t.name }}</option>
-        {% endfor %}
-      </select>
-    </label><br>
-
-    <label>Room:
-      <select name="room_id" required>
-        {% for r in rooms %}
-          <option value="{{ r.id }}">{{ r.name }}</option>
-        {% endfor %}
-      </select>
-    </label><br>
-
-    <label>Start: <input type="datetime-local" name="start_time" required></label><br>
-    <label>End: <input type="datetime-local" name="end_time" required></label><br>
-
-    <button type="submit">Create PT session</button>
-  </form>
-</section>
-
-<hr>
-
-<section>
-  <h3>Create invoice</h3>
-  <form method="post" action="{{ url_for('main.admin_invoice_route') }}">
-    <label>Member:
-      <select name="member_id" required>
-        {% for m in members %}
-          <option value="{{ m.id }}">#{{ m.id }} - {{ m.name }}</option>
-        {% endfor %}
-      </select>
-    </label><br>
-
-    <label>Description: <input type="text" name="description"></label><br>
-    <label>Amount: <input type="number" step="0.01" name="amount" required></label><br>
-    <label>Payment method: <input type="text" name="payment_method"></label><br>
-
-    <button type="submit">Create invoice</button>
-  </form>
-
-  <h4>Existing invoices</h4>
-  {% if invoices %}
-    <table border="1" cellpadding="4">
-      <tr>
-        <th>ID</th><th>Member</th><th>Amount</th><th>Status</th><th>Action</th>
-      </tr>
-      {% for inv in invoices %}
+    <h4>Existing invoices</h4>
+    {% if invoices %}
+      <table>
         <tr>
-          <td>{{ inv.id }}</td>
-          <td>{{ inv.member.name }}</td>
-          <td>{{ inv.amount }}</td>
-          <td>{{ inv.status }}</td>
-          <td>
-            {% if inv.status != 'Paid' %}
-              <form method="post" action="{{ url_for('main.admin_invoice_pay_route', invoice_id=inv.id) }}">
-                <button type="submit">Mark paid</button>
-              </form>
-            {% else %}
-              Paid at {{ inv.paid_at }}
-            {% endif %}
-          </td>
+          <th>ID</th>
+          <th>Member</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Action</th>
         </tr>
-      {% endfor %}
-    </table>
-  {% else %}
-    <p>No invoices yet.</p>
-  {% endif %}
-</section>
+        {% for inv in invoices %}
+          <tr>
+            <td>{{ inv.id }}</td>
+            <td>#{{ inv.member_id }}</td>
+            <td>{{ inv.description }}</td>
+            <td>{{ inv.amount }}</td>
+            <td>{{ inv.status }}</td>
+            <td>
+              {% if inv.status != "Paid" %}
+                <form method="post" action="{{ url_for('main.admin_invoice_pay_route', invoice_id=inv.id) }}">
+                  <button type="submit">Mark paid</button>
+                </form>
+              {% else %}
+                Paid at {{ inv.paid_at }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No invoices yet.</p>
+    {% endif %}
+  </section>
+
+  <hr>
+
+  <section>
+    <h3>Existing class sessions</h3>
+    {% if class_sessions %}
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Trainer</th>
+          <th>Room</th>
+          <th>Time</th>
+          <th>Change room</th>
+        </tr>
+        {% for c in class_sessions %}
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.title }}</td>
+            <td>#{{ c.trainer_id }}</td>
+            <td>{{ c.room.name if c.room else c.room_id }}</td>
+            <td>{{ c.start_time }} to {{ c.end_time }}</td>
+            <td>
+              <form method="post" action="{{ url_for('main.admin_class_update_room_route', class_id=c.id) }}">
+                <select name="room_id">
+                  {% for r in rooms %}
+                    <option value="{{ r.id }}" {% if r.id == c.room_id %}selected{% endif %}>
+                      {{ r.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No class sessions yet.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>Existing PT sessions</h3>
+    {% if pt_sessions %}
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Member</th>
+          <th>Trainer</th>
+          <th>Room</th>
+          <th>Time</th>
+          <th>Status</th>
+          <th>Change room</th>
+        </tr>
+        {% for p in pt_sessions %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>#{{ p.member_id }}</td>
+            <td>#{{ p.trainer_id }}</td>
+            <td>{{ p.room.name if p.room else p.room_id }}</td>
+            <td>{{ p.start_time }} to {{ p.end_time }}</td>
+            <td>{{ p.status }}</td>
+            <td>
+              <form method="post" action="{{ url_for('main.admin_ptsession_update_room_route', pt_id=p.id) }}">
+                <select name="room_id">
+                  {% for r in rooms %}
+                    <option value="{{ r.id }}" {% if r.id == p.room_id %}selected{% endif %}>
+                      {{ r.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No PT sessions yet.</p>
+    {% endif %}
+  </section>
+</main>
 {% endblock %}

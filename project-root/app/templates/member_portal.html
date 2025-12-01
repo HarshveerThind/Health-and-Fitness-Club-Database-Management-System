@@ -1,103 +1,173 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Member Portal</h2>
+<main>
+  <h2>Member portal</h2>
 
-<section>
-  <h3>Register new member</h3>
-  <form method="post" action="{{ url_for('main.member_register_route') }}">
-    <label>Name: <input type="text" name="name" required></label><br>
-    <label>Email: <input type="email" name="email" required></label><br>
-    <label>Date of birth: <input type="date" name="dob"></label><br>
-    <label>Gender: <input type="text" name="gender"></label><br>
-    <label>Phone: <input type="text" name="phone"></label><br>
-    <button type="submit">Register</button>
-  </form>
-</section>
-
-<hr>
-
-<section>
-  <h3>Select existing member</h3>
-  <form method="get" action="{{ url_for('main.member_portal') }}">
-    <label>Member:
-      <select name="member_id">
-        <option value="">-- choose --</option>
-        {% for m in members %}
-          <option value="{{ m.id }}" {% if m.id == selected_member_id %}selected{% endif %}>
-            #{{ m.id }} - {{ m.name }} ({{ m.email }})
-          </option>
-        {% endfor %}
-      </select>
-    </label>
-    <button type="submit">Load</button>
-  </form>
-</section>
-
-{% if dashboard_data %}
-  {% set member = dashboard_data.member %}
-  <hr>
-
-  <section>
-    <h3>Update profile & goal (Member #{{ member.id }})</h3>
-    <form method="post" action="{{ url_for('main.member_profile_route') }}">
-      <input type="hidden" name="member_id" value="{{ member.id }}">
-      <label>Name: <input type="text" name="name" value="{{ member.name }}" required></label><br>
-      <label>Gender: <input type="text" name="gender" value="{{ member.gender or '' }}"></label><br>
-      <label>Phone: <input type="text" name="phone" value="{{ member.phone or '' }}"></label><br>
-
-      <h4>New goal (optional)</h4>
-      <label>Description: <input type="text" name="goal_description"></label><br>
-      <label>Target weight (kg): <input type="number" step="0.1" name="target_weight"></label><br>
-
-      <button type="submit">Save</button>
-    </form>
-  </section>
-
-  <section>
-    <h3>Add health metric</h3>
-    <form method="post" action="{{ url_for('main.member_metric_route') }}">
-      <input type="hidden" name="member_id" value="{{ member.id }}">
-      <label>Height (cm): <input type="number" step="0.1" name="height_cm"></label><br>
-      <label>Weight (kg): <input type="number" step="0.1" name="weight_kg"></label><br>
-      <label>Heart rate (bpm): <input type="number" step="0.1" name="heart_rate_bpm"></label><br>
-      <button type="submit">Add metric</button>
-    </form>
-  </section>
-
-  <section>
-    <h3>Dashboard</h3>
-    <p><strong>Name:</strong> {{ member.name }}</p>
-    <p><strong>Email:</strong> {{ member.email }}</p>
-
-    <h4>Latest metric</h4>
-    {% if dashboard_data.latest_metric %}
-      <p>Height: {{ dashboard_data.latest_metric.height_cm or 'n/a' }} cm</p>
-      <p>Weight: {{ dashboard_data.latest_metric.weight_kg or 'n/a' }} kg</p>
-      <p>Heart rate: {{ dashboard_data.latest_metric.heart_rate_bpm or 'n/a' }} bpm</p>
-    {% else %}
-      <p>No health metrics yet.</p>
-    {% endif %}
-
-    <h4>Active goal</h4>
-    {% if dashboard_data.active_goal %}
-      <p>{{ dashboard_data.active_goal.description }}</p>
-    {% else %}
-      <p>No active goal.</p>
-    {% endif %}
-
-    <h4>Past classes</h4>
-    <p>Total: {{ dashboard_data.past_classes_count }}</p>
-
-    <h4>Upcoming PT sessions</h4>
-    {% if dashboard_data.upcoming_pt_sessions %}
-      <ul>
-        {% for s in dashboard_data.upcoming_pt_sessions %}
-          <li>{{ s.start_time }} with trainer #{{ s.trainer_id }} in room #{{ s.room_id }}</li>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flash">
+        {% for m in messages %}
+          <li>{{ m }}</li>
         {% endfor %}
       </ul>
-    {% else %}
-      <p>No upcoming PT sessions.</p>
     {% endif %}
+  {% endwith %}
+
+  <section>
+    <h3>Select existing member</h3>
+    <form method="get" action="{{ url_for('main.member_portal') }}">
+      <label>Member:
+        <select name="member_id">
+          <option value="">-- choose --</option>
+          {% for m in members %}
+            <option value="{{ m.id }}" {% if selected_member_id == m.id %}selected{% endif %}>
+              {{ m.name }} ({{ m.email }})
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Load</button>
+    </form>
   </section>
-{% endif %}
+
+  <section>
+    <h3>Register new member</h3>
+    <form method="post" action="{{ url_for('main.member_register_route') }}">
+      <label>Name:
+        <input type="text" name="name" required>
+      </label>
+      <label>Email:
+        <input type="email" name="email" required>
+      </label>
+      <label>Date of birth:
+        <input type="date" name="dob">
+      </label>
+      <label>Gender:
+        <input type="text" name="gender">
+      </label>
+      <label>Phone:
+        <input type="text" name="phone">
+      </label>
+      <button type="submit">Register</button>
+    </form>
+  </section>
+
+  {% if dashboard_data %}
+    {% set member = dashboard_data.member %}
+
+    <section>
+      <h3>Profile and goals for {{ member.name }}</h3>
+      <form method="post" action="{{ url_for('main.member_profile_route') }}">
+        <input type="hidden" name="member_id" value="{{ member.id }}">
+        <label>Name:
+          <input type="text" name="name" value="{{ member.name }}">
+        </label>
+        <label>Gender:
+          <input type="text" name="gender" value="{{ member.gender or '' }}">
+        </label>
+        <label>Phone:
+          <input type="text" name="phone" value="{{ member.phone or '' }}">
+        </label>
+        <label>New goal description:
+          <input type="text" name="goal_description">
+        </label>
+        <label>Target weight (kg):
+          <input type="number" step="0.1" name="target_weight">
+        </label>
+        <button type="submit">Update profile and goals</button>
+      </form>
+    </section>
+
+    <section>
+      <h3>Add health metric</h3>
+      <form method="post" action="{{ url_for('main.member_metric_route') }}">
+        <input type="hidden" name="member_id" value="{{ member.id }}">
+        <label>Height (cm):
+          <input type="number" step="0.1" name="height_cm">
+        </label>
+        <label>Weight (kg):
+          <input type="number" step="0.1" name="weight_kg">
+        </label>
+        <label>Heart rate (bpm):
+          <input type="number" step="1" name="heart_rate_bpm">
+        </label>
+        <button type="submit">Add metric</button>
+      </form>
+    </section>
+
+    <section>
+      <h3>Dashboard summary</h3>
+      <p><strong>Latest metric:</strong>
+        {% if dashboard_data.latest_metric %}
+          recorded at {{ dashboard_data.latest_metric.recorded_at }},
+          weight {{ dashboard_data.latest_metric.weight_kg or 'n/a' }} kg,
+          HR {{ dashboard_data.latest_metric.heart_rate_bpm or 'n/a' }} bpm
+        {% else %}
+          none yet
+        {% endif %}
+      </p>
+
+      <p><strong>Active goal:</strong>
+        {% if dashboard_data.active_goal %}
+          {{ dashboard_data.active_goal.description }}
+          {% if dashboard_data.active_goal.target_weight_kg %}
+            (target {{ dashboard_data.active_goal.target_weight_kg }} kg)
+          {% endif %}
+        {% else %}
+          none set
+        {% endif %}
+      </p>
+
+      <p><strong>Past classes attended:</strong> {{ dashboard_data.past_classes_count }}</p>
+
+      <h4>Upcoming PT sessions</h4>
+      {% if dashboard_data.upcoming_pt_sessions %}
+        <ul>
+          {% for s in dashboard_data.upcoming_pt_sessions %}
+            <li>
+              {{ s.start_time }} to {{ s.end_time }} with trainer #{{ s.trainer_id }}
+              in room {{ s.room.name if s.room else s.room_id }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No upcoming PT sessions.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h3>Upcoming group classes</h3>
+      {% if upcoming_classes %}
+        <ul>
+          {% for c in upcoming_classes %}
+            <li>
+              <strong>{{ c.title }}</strong><br>
+              {{ c.start_time }} to {{ c.end_time }}
+              in {{ c.room.name if c.room else ('Room ' ~ c.room_id) }}<br>
+              Capacity: {{ c.capacity }}
+            </li>
+          {% endfor %}
+        </ul>
+
+        <h4>Join a class</h4>
+        <form method="post" action="{{ url_for('main.member_class_register_route') }}">
+          <input type="hidden" name="member_id" value="{{ selected_member_id }}">
+          <label>Class:
+            <select name="class_session_id" required>
+              {% for c in upcoming_classes %}
+                <option value="{{ c.id }}">
+                  #{{ c.id }} - {{ c.title }} ({{ c.start_time }}, {{ c.room.name if c.room else ('Room ' ~ c.room_id) }})
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit">Register</button>
+        </form>
+      {% else %}
+        <p>No upcoming classes available.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+</main>
 {% endblock %}

@@ -6,6 +6,7 @@ from flask import (
     url_for,
     flash,
 )
+
 from models.operations import (
     register_member,
     update_member_profile,
@@ -21,8 +22,12 @@ from models.operations import (
     create_invoice,
     mark_invoice_paid,
     get_admin_portal_data,
+    create_trainer,
+    get_upcoming_classes,
+    register_member_for_class,
+    update_class_session_room,
+    update_pt_session_room,
 )
-from models.schema import Member, Trainer  # for simple exist checks if needed
 
 bp = Blueprint("main", __name__)
 
@@ -39,6 +44,7 @@ def member_portal():
     members = get_all_members()
     member_id = request.args.get("member_id", type=int)
     dashboard_data = None
+    upcoming_classes = get_upcoming_classes()
 
     if member_id:
         try:
@@ -51,6 +57,7 @@ def member_portal():
         members=members,
         selected_member_id=member_id,
         dashboard_data=dashboard_data,
+        upcoming_classes=upcoming_classes,
     )
 
 
@@ -112,6 +119,20 @@ def member_metric_route():
     return redirect(url_for("main.member_portal", member_id=member_id))
 
 
+@bp.route("/member/class-register", methods=["POST"])
+def member_class_register_route():
+    member_id = request.form.get("member_id", type=int)
+    class_id = request.form.get("class_session_id", type=int)
+
+    try:
+        register_member_for_class(member_id, class_id)
+        flash("Registered for class.")
+    except ValueError as e:
+        flash(str(e))
+
+    return redirect(url_for("main.member_portal", member_id=member_id))
+
+
 # ---------- Trainer portal ----------
 
 @bp.route("/trainer", methods=["GET"])
@@ -167,7 +188,23 @@ def admin_portal():
         rooms=data["rooms"],
         members=data["members"],
         invoices=data["invoices"],
+        class_sessions=data["class_sessions"],
+        pt_sessions=data["pt_sessions"],
     )
+
+
+@bp.route("/admin/trainer", methods=["POST"])
+def admin_trainer_route():
+    name = request.form.get("name")
+    email = request.form.get("email")
+
+    try:
+        create_trainer(name, email)
+        flash("Trainer created.")
+    except ValueError as e:
+        flash(str(e))
+
+    return redirect(url_for("main.admin_portal"))
 
 
 @bp.route("/admin/class", methods=["POST"])
@@ -229,4 +266,26 @@ def admin_invoice_pay_route(invoice_id):
     except ValueError as e:
         flash(str(e))
 
+    return redirect(url_for("main.admin_portal"))
+
+
+@bp.route("/admin/class/<int:class_id>/room", methods=["POST"])
+def admin_class_update_room_route(class_id):
+    new_room_id = request.form.get("room_id", type=int)
+    try:
+        update_class_session_room(class_id, new_room_id)
+        flash("Class room updated.")
+    except ValueError as e:
+        flash(str(e))
+    return redirect(url_for("main.admin_portal"))
+
+
+@bp.route("/admin/ptsession/<int:pt_id>/room", methods=["POST"])
+def admin_ptsession_update_room_route(pt_id):
+    new_room_id = request.form.get("room_id", type=int)
+    try:
+        update_pt_session_room(pt_id, new_room_id)
+        flash("PT session room updated.")
+    except ValueError as e:
+        flash(str(e))
     return redirect(url_for("main.admin_portal"))

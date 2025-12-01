@@ -1,100 +1,153 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Trainer Portal</h2>
+<main>
+  <h2>Trainer portal</h2>
 
-<section>
-  <h3>Select trainer</h3>
-  <form method="get" action="{{ url_for('main.trainer_portal') }}">
-    <label>Trainer:
-      <select name="trainer_id">
-        <option value="">-- choose --</option>
-        {% for t in trainers %}
-          <option value="{{ t.id }}" {% if t.id == selected_trainer_id %}selected{% endif %}>
-            #{{ t.id }} - {{ t.name }} ({{ t.email }})
-          </option>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flash">
+        {% for m in messages %}
+          <li>{{ m }}</li>
         {% endfor %}
-      </select>
-    </label>
-    <button type="submit">Load</button>
-  </form>
-</section>
+      </ul>
+    {% endif %}
+  {% endwith %}
 
-{% if selected_trainer_id and schedule_data %}
-  <hr>
   <section>
-    <h3>Set availability for {{ schedule_data.trainer.name }}</h3>
-    <form method="post" action="{{ url_for('main.trainer_availability_route') }}">
-      <input type="hidden" name="trainer_id" value="{{ schedule_data.trainer.id }}">
-      <label>Start: <input type="datetime-local" name="start_time" required></label><br>
-      <label>End: <input type="datetime-local" name="end_time" required></label><br>
-      <button type="submit">Add slot</button>
+    <h3>Select trainer</h3>
+    <form method="get" action="{{ url_for('main.trainer_portal') }}">
+      <label>Trainer:
+        <select name="trainer_id">
+          <option value="">-- choose --</option>
+          {% for t in trainers %}
+            <option value="{{ t.id }}" {% if selected_trainer_id == t.id %}selected{% endif %}>
+              {{ t.name }} ({{ t.email }})
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Load</button>
+    </form>
+  </section>
+
+  {% if selected_trainer_id %}
+    <section>
+      <h3>Add availability</h3>
+      <form method="post" action="{{ url_for('main.trainer_availability_route') }}">
+        <input type="hidden" name="trainer_id" value="{{ selected_trainer_id }}">
+        <label>Start:
+          <input type="datetime-local" name="start_time" required>
+        </label>
+        <label>End:
+          <input type="datetime-local" name="end_time" required>
+        </label>
+        <button type="submit">Add availability</button>
+      </form>
+    </section>
+  {% endif %}
+
+  {% if schedule_data %}
+    <section>
+      <h3>Upcoming schedule for {{ schedule_data.trainer.name }}</h3>
+
+      <h4>Group classes</h4>
+      {% if schedule_data.classes %}
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Room</th>
+            <th>Time</th>
+          </tr>
+          {% for c in schedule_data.classes %}
+            <tr>
+              <td>{{ c.id }}</td>
+              <td>{{ c.title }}</td>
+              <td>{{ c.room.name if c.room else c.room_id }}</td>
+              <td>{{ c.start_time }} to {{ c.end_time }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <p>No upcoming classes.</p>
+      {% endif %}
+
+      <h4>PT sessions</h4>
+      {% if schedule_data.pt_sessions %}
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Member</th>
+            <th>Room</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+          {% for p in schedule_data.pt_sessions %}
+            <tr>
+              <td>{{ p.id }}</td>
+              <td>#{{ p.member_id }}</td>
+              <td>{{ p.room.name if p.room else p.room_id }}</td>
+              <td>{{ p.start_time }} to {{ p.end_time }}</td>
+              <td>{{ p.status }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <p>No upcoming PT sessions.</p>
+      {% endif %}
+
+      <h4>Availability slots</h4>
+      {% if schedule_data.availability %}
+        <ul>
+          {% for a in schedule_data.availability %}
+            <li>{{ a.start_time }} to {{ a.end_time }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No availability recorded.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <section>
+    <h3>Member lookup</h3>
+    <form method="get" action="{{ url_for('main.trainer_portal') }}">
+      <input type="hidden" name="trainer_id" value="{{ selected_trainer_id or '' }}">
+      <label>Search by name:
+        <input type="text" name="search" value="{{ search_term or '' }}">
+      </label>
+      <button type="submit">Search</button>
     </form>
 
-    <h4>Existing availability</h4>
-    {% if schedule_data.availabilities %}
+    {% if member_results %}
       <ul>
-        {% for s in schedule_data.availabilities %}
-          <li>{{ s.start_time }} - {{ s.end_time }}</li>
+        {% for r in member_results %}
+          {% set m = r.member %}
+          <li>
+            <strong>{{ m.name }}</strong> ({{ m.email }})<br>
+            {% if r.active_goal %}
+              Goal: {{ r.active_goal.description }}
+              {% if r.active_goal.target_weight_kg %}
+                ({{ r.active_goal.target_weight_kg }} kg)
+              {% endif %}
+              <br>
+            {% else %}
+              Goal: none<br>
+            {% endif %}
+            {% if r.last_metric %}
+              Last metric:
+              weight {{ r.last_metric.weight_kg or 'n/a' }} kg,
+              HR {{ r.last_metric.heart_rate_bpm or 'n/a' }} bpm
+            {% else %}
+              Last metric: none
+            {% endif %}
+          </li>
         {% endfor %}
       </ul>
-    {% else %}
-      <p>No availability slots yet.</p>
+    {% elif search_term %}
+      <p>No members matched "{{ search_term }}".</p>
     {% endif %}
   </section>
-
-  <section>
-    <h3>Schedule</h3>
-
-    <h4>Class sessions</h4>
-    {% if schedule_data.classes %}
-      <ul>
-        {% for c in schedule_data.classes %}
-          <li>{{ c.title }}: {{ c.start_time }} - {{ c.end_time }} (Room {{ c.room_id }})</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No class sessions.</p>
-    {% endif %}
-
-    <h4>PT sessions</h4>
-    {% if schedule_data.pt_sessions %}
-      <ul>
-        {% for p in schedule_data.pt_sessions %}
-          <li>Member #{{ p.member_id }}: {{ p.start_time }} - {{ p.end_time }} (Room {{ p.room_id }})</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No PT sessions.</p>
-    {% endif %}
-  </section>
-{% endif %}
-
-<hr>
-
-<section>
-  <h3>Member lookup</h3>
-  <form method="get" action="{{ url_for('main.trainer_portal') }}">
-    {% if selected_trainer_id %}
-      <input type="hidden" name="trainer_id" value="{{ selected_trainer_id }}">
-    {% endif %}
-    <label>Name contains:
-      <input type="text" name="search" value="{{ search_term or '' }}">
-    </label>
-    <button type="submit">Search</button>
-  </form>
-
-  {% if member_results %}
-    <ul>
-      {% for m in member_results %}
-        <li>
-          <strong>{{ m.name }}</strong> ({{ m.email }})
-          <!-- For simplicity, we only show name/email here.
-               Could expand with another query if you want last metric / goal inline. -->
-        </li>
-      {% endfor %}
-    </ul>
-  {% elif search_term %}
-    <p>No members found for "{{ search_term }}".</p>
-  {% endif %}
-</section>
+</main>
 {% endblock %}
